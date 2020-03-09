@@ -29,6 +29,7 @@
 
 #include "../include/global.h"
 #include "../include/logger.h"
+using namespace std;
 
 char LOGFILE[FILEPATH_LEN];
 void cse4589_init_log(char* port)
@@ -105,3 +106,80 @@ void cse4589_print_and_log(const char* format, ...)
 	fclose(fp);
     va_end(args_pointer);
 }
+// FILE *fp ;
+// static int SESSION_TRACKER; //Keeps track of session
+// std::string logname = "/tmp/gur_1";
+// char* print_time()
+// {
+//     int size = 0;
+//     time_t t;
+//     char *buf;
+
+//     t=time(NULL); /* get current calendar time */
+
+//     char *timestr = asctime( localtime(&t) );
+//     timestr[strlen(timestr) - 1] = 0;  //Getting rid of \n
+
+//     size = strlen(timestr)+ 1 + 2; //Additional +2 for square braces
+//     buf = (char*)malloc(size);
+
+//     memset(buf, 0x0, size);
+//     snprintf(buf,size,"[%s]", timestr);
+
+//     return buf;
+// }
+
+// void log_print(char* filename, int line, char *fmt,...)
+// {
+//     va_list         list;
+//     char            *p, *r;
+//     int             e;
+
+
+//     if(SESSION_TRACKER > 0)
+//       fp = fopen (logname.c_str(),"a+");
+//     else {
+//       fp = fopen (logname.c_str(),"w");
+//     }
+//     fprintf(fp,"%s ",print_time());
+//     fprintf(fp,"[%s][line: %d] ",filename,line);
+//     va_start( list, fmt );
+
+//     for ( p = fmt ; *p ; ++p )
+//     {
+//         if ( *p != '%' )//If simple string
+//         {
+//             fputc( *p,fp );
+//         }
+//         else
+//         {
+//             switch ( *++p )
+//             {
+//                 /* string */
+//             case 's':
+//             {
+//                 r = va_arg( list, char * );
+
+//                 fprintf(fp,"%s", r);
+//                 continue;
+//             }
+
+//             /* integer */
+//             case 'd':
+//             {
+//                 e = va_arg( list, int );
+
+//                 fprintf(fp,"%d", e);
+//                 continue;
+//             }
+
+//             default:
+//                 fputc( *p, fp );
+//             }
+//         }
+//     }
+//     va_end( list );
+//     fputc( '\n', fp );
+//     SESSION_TRACKER++;
+//     fclose(fp);
+// }

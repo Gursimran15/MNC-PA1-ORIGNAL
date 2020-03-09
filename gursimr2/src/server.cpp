@@ -325,10 +325,10 @@ int server(char *arg)
 					}
 					/* Read from existing clients */
 					else{
-						char *buffer = (char*) malloc(sizeof(char)*2*BUFFER_SIZE);
-						memset(buffer, '\0', 2*BUFFER_SIZE);
+						char *buffer = (char*) malloc(sizeof(char)*10*BUFFER_SIZE);
+						memset(buffer, '\0', 10*BUFFER_SIZE);
 						/* Initialize buffer to receieve response */
-					    if(recv(sock_index, buffer, BUFFER_SIZE, 0) <= 0){
+					    if(recv(sock_index, buffer, 10*BUFFER_SIZE, 0) <= 0){
 							printf("Remote Host terminated connection!\n");           
 						// if(recv(sock_index, buffer, BUFFER_SIZE, 0) <= 0){ //changed sock_index to fdaccept
                         //     printf("%s\n",buffer);
@@ -349,8 +349,8 @@ int server(char *arg)
 							printf("\nClient sent me: %s\n", buffer);
 							printf("I am here");
 							string s=buffer;
-							char *msg = (char*) malloc(sizeof(char)*4*MSG_SIZE);
-							memset(msg, '\0', 4*MSG_SIZE);
+							char *msg = (char*) malloc(sizeof(char)*15*MSG_SIZE);
+							memset(msg, '\0', 15*MSG_SIZE);
 							std::size_t found = s.find("LOGIN");
   							if (found!=std::string::npos){
     						// {std::cout << "first 'node' found at: " << found << '\n';
@@ -395,8 +395,8 @@ int server(char *arg)
 										// printf("I am here 1");
 										args[0]=strtok_r(str, " ", &str);
 										printf("%s\n",args[0]);
-											char *msg = (char*) malloc(sizeof(char)*2*MSG_SIZE);
-											memset(msg, '\0', MSG_SIZE);
+											char *msg = (char*) malloc(sizeof(char)*15*MSG_SIZE);
+											memset(msg, '\0', 15*MSG_SIZE);
 										// printf("I am here 2");
 										// if(strcmp(args[0],"LOGIN")==0){
 											// printf("I am here 3");
@@ -414,6 +414,7 @@ int server(char *arg)
 											printf("%s\n",args[2]);
 											cse4589_print_and_log("[RELAYED:SUCCESS]\n");
 											cse4589_print_and_log("msg from:%s, to:%s\n[msg]:%s\n",ipstr, args[1], args[2]);
+											// LOG_PRINT("msg from:%s, to:%s\n[msg]:%s\n",ipstr, args[1], args[2]);
 											strcpy(msg,"SEND ");
 											strcat(msg,ipstr);
 											strcat(msg," ");
@@ -432,12 +433,103 @@ int server(char *arg)
 											 }
 											 cse4589_print_and_log("[RELAYED:END]\n");
 								}
+								else{
+											std::size_t found = s.find("BROADCAST");
+										if (found!=std::string::npos){
+											printf("Client Sent:%s\n",buffer);
+											socklen_t len;
+											struct sockaddr_storage addr;
+											char ipstr[INET6_ADDRSTRLEN];
+											int port;
+
+											len = sizeof addr;
+											getpeername(sock_index, (struct sockaddr*)&addr, &len);
+											if (addr.ss_family == AF_INET) {
+												struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+												port = ntohs(s->sin_port);
+												inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
+											}
+											printf("Peer IP address: %s\n", ipstr);
+											
+												int dest;
+												char *args[3];
+												// printf("I am here");
+												char *str=buffer;
+												// printf("I am here 1");
+												args[0]=strtok_r(str, " ", &str);
+												printf("%s\n",args[0]);
+													char *msg = (char*) malloc(sizeof(char)*15*MSG_SIZE);
+													memset(msg, '\0', 15*MSG_SIZE);
+													args[1]=strtok_r(NULL, " ",&str);
+													printf("%s\n",args[1]);
+													strcpy(msg,"BROADCAST ");
+															strcat(msg,ipstr);
+															strcat(msg," ");
+															strcat(msg,args[1]);
+													for(int i=0;i<=ipp_index;i++){
+														if(!(strcmp(l[i].ipaddr,ipstr)==0)){
+															dest=l[i].fd;
+															printf("%s\n%d\n",msg,dest);
+															for(int j = 0; j <= head_socket; j++) {
+														// send to everyone!
+														if (FD_ISSET(j, &master_list)) {
+															// except the listener and ourselves
+															if (j != server_socket && j != sock_index) {
+																			if(send(dest, msg, strlen(msg), 0) == strlen(msg))
+																			{	printf("Done!\n");break;}
+																			fflush(stdout);
+																		}
+
+																	}
+																}
+																	}
+																}
+													// printf("I am here 4");
+													// printf("I am here 5");
+													cse4589_print_and_log("[RELAYED:SUCCESS]\n");
+													cse4589_print_and_log("msg from:%s, to:%s\n[msg]:%s\n",ipstr,"255.255.255.255", args[1]);
+													// LOG_PRINT("msg from:%s, to:%s\n[msg]:%s\n",ipstr, args[1], args[2]);
+									// 				strcpy(msg,"BROADCAST ");
+									// 				strcat(msg,ipstr);
+									// 				strcat(msg," ");
+									// 				strcat(msg,args[1]);
+									// 				printf("%s\n%d\n",msg,dest);
+									// 				for(int j = 0; j <= head_socket; j++) {
+									// // send to everyone!
+									// if (FD_ISSET(j, &master_list)) {
+									// 	// except the listener and ourselves
+									// 	if (j != server_socket && j != sock_index) {
+									// 					if(send(dest, msg, strlen(msg), 0) == strlen(msg))
+									// 					{	printf("Done!\n");break;}
+									// 					fflush(stdout);
+									// 	}
+									// }
+									// 				}
+													cse4589_print_and_log("[RELAYED:END]\n");
+
+
+											}//IF BROADCAST
+											else{
+							std::size_t found = s.find("REFRESH");
+  							if (found!=std::string::npos){
+								  strcpy(msg,"REFRESH ");
+							int n;
+							for(int i=0;i<=ipp_index;i++){
+										n=sprintf(buffer,"%-5d%-35s%-20s%-8d\n",l[i].list_id,l[i].hostname,l[i].ipaddr,l[i].port_no);
+										strncat(msg,buffer,n);
+										if(i<ipp_index)
+										strncat(msg,",",1);
+										}
+							if(send(sock_index,msg, strlen(msg), 0) == strlen(msg))
+								printf("\nList send to Client\n");
+											}
+										}
 								
 							}
 							// if(send(fdaccept, buffer , strlen(buffer), 0) == strlen(buffer))
 							// 	printf("Done!\n");
-							fflush(stdout);
-						}
+							}
+						}//received messages/data
 						
 						free(buffer);
 					}

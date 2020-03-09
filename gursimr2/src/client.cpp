@@ -172,9 +172,9 @@ int connect_to_host(char* port)
 					/* Check if new command on STDIN */
 					if (sock_index == STDIN){
 						printf("5:%d\n",sock_index);
-						char *cmd = (char*) malloc(sizeof(char)*CMD_SIZE);
-						memset(cmd, '\0', CMD_SIZE);
-						if(fgets(cmd, CMD_SIZE-1, stdin) == NULL) //Mind the newline character that will be written to cmd
+						char *cmd = (char*) malloc(sizeof(char)*30*CMD_SIZE);
+						memset(cmd, '\0', 30*CMD_SIZE);
+						if(fgets(cmd, 30*CMD_SIZE-1, stdin) == NULL) //Mind the newline character that will be written to cmd
 							exit(-1);
 							printf("6:%d%s\n",sock_index,cmd);
 							int s;
@@ -199,6 +199,12 @@ int connect_to_host(char* port)
 							}
 							if(strcmp(args[0],"SEND")==0){
 								s=5;
+							}
+							if(strcmp(args[0],"BROADCAST")==0){
+								s=6;
+							}
+							if(strcmp(cmd,"REFRESH")==0){
+								s=7;
 							}
 							printf("7:%d%s\n",sock_index,cmd);
 							// if(s>3){
@@ -366,8 +372,8 @@ int connect_to_host(char* port)
 										// strtok_r(strforsend, " ", &strforsend);
 										// strtok_r(NULL, " ", &strforsend);
 										// args[2]=strtok_r(NULL, "\n", &strforsend);
-										char *msg = (char*) malloc(sizeof(char)*MSG_SIZE);
-									memset(msg, '\0', MSG_SIZE);
+										char *msg = (char*) malloc(sizeof(char)*15*MSG_SIZE);
+									memset(msg, '\0', 15*MSG_SIZE);
 									if(strcmp(args[0],"SEND")==0){
 									
 									// for(int j=0;j<=ipp_index;j++){
@@ -411,6 +417,94 @@ int connect_to_host(char* port)
 										printf("You need to login first");
 									}
 									break;
+								case 6: if(login_flag == 1){
+									char *msg = (char*) malloc(sizeof(char)*15*MSG_SIZE);
+									memset(msg, '\0', 15*MSG_SIZE);
+									if(strcmp(args[0],"BROADCAST")==0){
+									
+									// for(int j=0;j<=ipp_index;j++){
+									// printf("%s\n",list[j]);
+									// 	}
+									// char temp[1024];
+									// strcpy(temp, " ");
+									// for(int l=0;l<=ipp_index;l++){
+									// // printf("I am here in List:%s\n",list[0]);
+									// cse4589_print_and_log("%s\n",list[l]);
+									// 	// strcat(temp,list[l]);
+									// 	// strcat(temp, "\n");
+									// 	}
+										// printf("%s\n",temp);
+									//Problem here
+									cse4589_print_and_log("[%s:SUCCESS]\n", "BROADCAST");
+									// cse4589_print_and_log("[%s:hello]\n", "LIST")
+									strcpy(msg,"BROADCAST ");
+									strcat(msg,args[1]);
+									// strcat(msg," ");
+									// strcat(msg,args[2]);
+									int len;
+
+										len = strlen(msg);
+										// if (sendall(s, msg, &len) == -1) {
+										// 	perror("sendall");
+										// 	printf("We only sent %d bytes because of the error!\n", len);
+										// } 
+									if(send(fdsocket, msg, strlen(msg), 0) == strlen(msg))
+										printf("Done!\n");
+									fflush(stdout);
+									cse4589_print_and_log("[%s:END]\n", "BROADCAST");
+									// printf("%s\n",temp);
+									}
+									else{
+										cse4589_print_and_log("[%s:ERROR]\n", "BROADCAST");
+										cse4589_print_and_log("[%s:END]\n", "BROADCAST");
+									}
+									}
+									else{
+										printf("You need to login first");
+									}
+									break;
+								case 7: 
+									// printf("For List %s %d\n",list[0],ipp_index);
+									if(login_flag == 1){
+										// printf("For List %s %d\n",list[0],ipp_index);
+										// for(int l=0;l<=ipp_index;l++){
+									// printf("I am here in List:%s\n",list[0]);
+									// cse4589_print_and_log("%s\n",list[l]);
+										// strcat(temp,list[l]);
+										// strcat(temp, "\n");
+										// }
+									if(strcmp(cmd,"REFRESH")==0){
+									printf("\nSENDing it to the remote server ... %s","REFRESH");
+									if(send(fdsocket, "REFRESH", strlen("REFRESH"), 0) == strlen("REFRESH"))
+										printf("Done!\n");
+									// for(int j=0;j<=ipp_index;j++){
+									// printf("%s\n",list[j]);
+									// 	}
+									// char temp[1024];
+									// strcpy(temp, " ");
+									// for(int l=0;l<=ipp_index;l++){
+									// // printf("I am here in List:%s\n",list[0]);
+									// cse4589_print_and_log("%s\n",list[l]);
+									// 	// strcat(temp,list[l]);
+									// 	// strcat(temp, "\n");
+									// 	}
+										// printf("%s\n",temp);
+									//Problem here
+									cse4589_print_and_log("[%s:SUCCESS]\n", "REFRESH");
+									// cse4589_print_and_log("[%s:hello]\n", "LIST");
+									cse4589_print_and_log("%s",listall);
+									cse4589_print_and_log("[%s:END]\n", "REFRESH");
+									// printf("%s\n",temp);
+									}
+									else{
+										cse4589_print_and_log("[%s:ERROR]\n", "REFRESH");
+										cse4589_print_and_log("[%s:END]\n", "REFRESH");
+									}
+									}
+									else{
+										printf("You need to login first");
+									}
+									break;
 							default:;
 
 							}
@@ -419,10 +513,10 @@ int connect_to_host(char* port)
 					} //END stdin
 					else if(sock_index==fdsocket){
 						/* Initialize buffer to receieve response */
-						char *buffer = (char*) malloc(sizeof(char)*2*BUFFER_SIZE);
-						memset(buffer, '\0', 2*BUFFER_SIZE);
+						char *buffer = (char*) malloc(sizeof(char)*15*BUFFER_SIZE);
+						memset(buffer, '\0', 15*BUFFER_SIZE);
 						
-						if(recv(sock_index, buffer, 2*BUFFER_SIZE, 0) <= 0){
+						if(recv(sock_index, buffer, 15*BUFFER_SIZE, 0) <= 0){
 							close(sock_index);
 							printf("Remote Server terminated connection!\n");
 							login_flag=0;
@@ -480,6 +574,25 @@ int connect_to_host(char* port)
 								cse4589_print_and_log("msg from:%s\n[msg]:%s\n",h1,h2);
 								cse4589_print_and_log("[RECEIVED:END]\n");
 									fflush(stdout);
+								}
+								else{
+									// cse4589_print_and_log("[RECEIVED:SUCCESS]\n");
+								if(strncmp(h,"BROADCAST",9)==0){
+									
+										char *h1;
+										char *h2;
+										h1=strtok_r(NULL, " ", &strlist);  
+										h2=strtok_r(NULL, " ", &strlist); 
+									if(h1!=NULL){ 
+										printf("%s\n",h1);
+								}
+								if(h2!=NULL){
+										printf("%s\n",h2);
+								}
+								cse4589_print_and_log("msg from:%s\n[msg]:%s\n",h1,h2);
+								cse4589_print_and_log("[RECEIVED:END]\n");
+									fflush(stdout);
+								}
 								}
 							
 						}

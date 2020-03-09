@@ -23,7 +23,8 @@
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
-
+#include<time.h>
+#include <stdarg.h> 
 #include "../include/global.h"
 #include "../include/logger.h"
 
@@ -36,6 +37,14 @@ using namespace std;
  * @param  argv The argument list
  * @return 0 EXIT_SUCCESS
  */
+// void log_print(char* filename, int line, char *fmt,...);
+// #define LOG_PRINT(...) log_print(__FILE__, __LINE__, __VA_ARGS__ )
+
+// FILE *fp ;
+// static int SESSION_TRACKER; //Keeps track of session
+// std::string logname = "/tmp/gur_1";
+
+
 int main(int argc, char **argv)
 {
 	/*Init. Logger*/
@@ -54,5 +63,6 @@ int main(int argc, char **argv)
 		if(strcmp(argv[1],"c")==0){
 			
 		client(argv[2]);}
+		
 	return 0;
 }
