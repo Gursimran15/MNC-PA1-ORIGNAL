@@ -359,7 +359,7 @@ int server(char *arg)
 							add_client(buffer,ipp_index,l,sock_index);
 							printf("After add client :%d\n",ipp_index);
 							printf("%s %s",l[0].hostname,l[1].hostname);
-							strcpy(msg,"LOGIN,");
+							strcpy(msg,"LOGIN ");
 							int n;
 							for(int i=0;i<=ipp_index;i++){
 										n=sprintf(buffer,"%-5d%-35s%-20s%-8d\n",l[i].list_id,l[i].hostname,l[i].ipaddr,l[i].port_no);
