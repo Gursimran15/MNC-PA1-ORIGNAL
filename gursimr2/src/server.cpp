@@ -56,6 +56,7 @@ char hostname[512];
 char ipaddr[INET_ADDRSTRLEN];
 int port_no;
 int fd;
+int login;
 };
 bool compare(lists a, lists b) 
 { 
@@ -131,6 +132,7 @@ void add_client(char *buffer,int &i_index,lists l[],int socketfd){
 								// printf("I am here 8");
 								l[i_index].list_id=i_index+1;
 								l[i_index].fd=socketfd;
+								l[i_index].login=1;
 								printf("%d\n",socketfd);
 								// printf("I am here 8.1");
 								strncpy(l[i_index].hostname,he->h_name,256);
@@ -163,6 +165,7 @@ int server(char *arg)
 	// 	exit(-1);
 	// }
 	int ipp_index=-1;
+	int donotmove=0;
 	int server_socket, head_socket, selret, sock_index, fdaccept=0, caddr_len;
 	struct sockaddr_in client_addr;
 	struct addrinfo hints, *res,*p;
@@ -249,6 +252,9 @@ int server(char *arg)
 							if(strcmp(cmd,"LIST\n")==0){
 								s=3;
 							}
+							if(strcmp(cmd,"EXIT\n")==0){
+								s=4;
+							}
 							// if(s>3){
 							// 	printf("You must Login first!");
 							// }
@@ -290,7 +296,7 @@ int server(char *arg)
 									break;
 							case 3: 	if(strcmp(cmd,"LIST\n")==0){
 										cse4589_print_and_log("[%s:SUCCESS]\n", "LIST");
-											for(int i=0;i<=ipp_index;i++){
+											for(int i=0;i<=ipp_index && l[i].login==1;i++){
 										cse4589_print_and_log("%-5d%-35s%-20s%-8d\n", l[i].list_id,l[i].hostname,l[i].ipaddr,l[i].port_no);
 											}
 										cse4589_print_and_log("[%s:END]\n", "LIST");
@@ -300,6 +306,18 @@ int server(char *arg)
 											cse4589_print_and_log("[%s:END]\n", "LIST");
 										}
 										break;
+							case 4: {
+									if(strcmp(cmd,"EXIT")==0){
+									cse4589_print_and_log("[%s:SUCCESS]\n", "EXIT");
+									cse4589_print_and_log("[%s:END]\n", "EXIT");
+									exit(0);
+									}
+									else{
+										cse4589_print_and_log("[%s:ERROR]\n", "EXIT");
+										cse4589_print_and_log("[%s:END]\n", "EXIt");
+									}
+									break;
+									}
 						}
 
 						printf("\nI got: %s\n", cmd);
@@ -353,6 +371,7 @@ int server(char *arg)
 							memset(msg, '\0', 15*MSG_SIZE);
 							std::size_t found = s.find("LOGIN");
   							if (found!=std::string::npos){
+								  donotmove=0;
     						// {std::cout << "first 'node' found at: " << found << '\n';
 							printf("Before add client :%d\n",ipp_index);
 							printf("%s %s",l[0].hostname,l[1].hostname);
@@ -372,7 +391,7 @@ int server(char *arg)
 							}
 							else{
 								std::size_t found = s.find("SEND");
-								if (found!=std::string::npos){
+								if (found!=std::string::npos && donotmove==0){
 									printf("Client Sent:%s\n",buffer);
 									socklen_t len;
 									struct sockaddr_storage addr;
@@ -402,11 +421,14 @@ int server(char *arg)
 											// printf("I am here 3");
 											args[1]=strtok_r(NULL, " ",&str);
 											printf("%s\n",args[1]);
-											
 											for(int i=0;i<=ipp_index;i++){
-												if(strcmp(l[i].ipaddr,args[1])==0){
+												if(strcmp(l[i].ipaddr,args[1])==0 && l[i].login==1){
 													dest=l[i].fd;
 												}
+												// else if(!(strcmp(l[i].ipaddr,args[1])==0)&& l[i].login==0){
+												// 	cse4589_print_and_log("[RELAYED:ERROR]\n");
+												// 	cse4589_print_and_log("[RELAYED:END]\n");
+												// }
 											}
 											// printf("I am here 4");
 											// printf("I am here 5");
@@ -435,7 +457,7 @@ int server(char *arg)
 								}
 								else{
 											std::size_t found = s.find("BROADCAST");
-										if (found!=std::string::npos){
+										if (found!=std::string::npos && donotmove==0){
 											printf("Client Sent:%s\n",buffer);
 											socklen_t len;
 											struct sockaddr_storage addr;
@@ -467,7 +489,7 @@ int server(char *arg)
 															strcat(msg," ");
 															strcat(msg,args[1]);
 													for(int i=0;i<=ipp_index;i++){
-														if(!(strcmp(l[i].ipaddr,ipstr)==0)){
+														if(!(strcmp(l[i].ipaddr,ipstr)==0) && l[i].login==1){
 															dest=l[i].fd;
 															printf("%s\n%d\n",msg,dest);
 															for(int j = 0; j <= head_socket; j++) {
@@ -511,17 +533,79 @@ int server(char *arg)
 											}//IF BROADCAST
 											else{
 							std::size_t found = s.find("REFRESH");
-  							if (found!=std::string::npos){
+  							if (found!=std::string::npos && donotmove==0){
 								  strcpy(msg,"REFRESH ");
 							int n;
 							for(int i=0;i<=ipp_index;i++){
+										if(l[i].login == 1){
 										n=sprintf(buffer,"%-5d%-35s%-20s%-8d\n",l[i].list_id,l[i].hostname,l[i].ipaddr,l[i].port_no);
 										strncat(msg,buffer,n);
 										if(i<ipp_index)
-										strncat(msg,",",1);
+										strncat(msg,",",1);}
 										}
 							if(send(sock_index,msg, strlen(msg), 0) == strlen(msg))
 								printf("\nList send to Client\n");
+											}
+											else{
+												std::size_t found = s.find("LOGOUT");
+  										if (found!=std::string::npos && donotmove==0){
+								  			// strcpy(msg,"REFRESH ");
+											  char *args[3];
+												// printf("I am here");
+												char *str=buffer;
+												// printf("I am here 1");
+												args[0]=strtok_r(str, " ", &str);
+												args[1]=strtok_r(NULL, " ", &str);
+												int n;
+												struct lists t;
+												printf("I am here");
+												for(int i=0;i<=ipp_index;i++){
+														if((strcmp(l[i].ipaddr,args[1])==0) && l[i].login==1){
+															l[i].login=0;
+															donotmove=1;
+														}}
+											// for(int i=0;i<=ipp_index;i++){
+											// 			if((strcmp(l[i].ipaddr,args[1])==0)){
+											// 			 t=l[i];
+											// 			 l[i]=l[ipp_index];
+											// 			 l[ipp_index]=t;
+											// 			 break;
+											// 			}
+											// 			}
+											// 			l[ipp_index].fd=0;
+											// 			l[ipp_index].list_id=0;
+											// 			l[ipp_index].port_no=0;
+											// 			strcpy(l[ipp_index].hostname,"");
+											// 			strcpy(l[ipp_index].ipaddr,"");
+											// 			ipp_index--;
+											// 			printf("%d\n",ipp_index);
+											// 			if(ipp_index>1)
+											// 			sorting(l,ipp_index);
+											// for(int i=0;i<=ipp_index;i++){
+											// 			n=sprintf(buffer,"%-5d%-35s%-20s%-8d\n",l[i].list_id,l[i].hostname,l[i].ipaddr,l[i].port_no);
+											// 			strncat(msg,buffer,n);
+											// 			if(i<ipp_index)
+											// 			strncat(msg,",",1);
+											// 			}
+											// for(int i=0;i<=ipp_index;i++){
+											// 				dest=l[i].fd;
+											// 				printf("%s\n%d\n",msg,dest);
+											// 				for(int j = 0; j <= head_socket; j++) {
+											// 			// send to everyone!
+											// 			if (FD_ISSET(j, &master_list)) {
+											// 				// except the listener and ourselves
+											// 				if (j != server_socket && j != sock_index) {
+											// 								if(send(dest, msg, strlen(msg), 0) == strlen(msg))
+											// 								{	printf("Done!\n");break;}
+											// 								fflush(stdout);
+											// 							}
+
+											// 						}
+											// 					}
+																	
+											// 					}
+
+												}
 											}
 										}
 								

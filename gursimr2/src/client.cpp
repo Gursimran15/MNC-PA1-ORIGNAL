@@ -206,6 +206,12 @@ int connect_to_host(char* port)
 							if(strcmp(cmd,"REFRESH")==0){
 								s=7;
 							}
+							if(strcmp(cmd,"EXIT")==0){
+								s=8;
+							}
+							if(strcmp(cmd,"LOGOUT")==0){
+								s=9;
+							}
 							printf("7:%d%s\n",sock_index,cmd);
 							// if(s>3){
 							// 	printf("You must Login first!");
@@ -505,6 +511,39 @@ int connect_to_host(char* port)
 										printf("You need to login first");
 									}
 									break;
+							case 8: {
+									if(strcmp(cmd,"EXIT")==0){
+									cse4589_print_and_log("[%s:SUCCESS]\n", "EXIT");
+									cse4589_print_and_log("[%s:END]\n", "EXIT");
+									login_flag=0;
+									exit(0);
+									}
+									else{
+										cse4589_print_and_log("[%s:ERROR]\n", "EXIT");
+										cse4589_print_and_log("[%s:END]\n", "EXIT");
+									}
+									break;
+								}
+							case 9: {
+									if(strcmp(cmd,"LOGOUT")==0){
+									cse4589_print_and_log("[%s:SUCCESS]\n", "LOGOUT");
+									login_flag=0;
+									char *msg = (char*) malloc(sizeof(char)*15*MSG_SIZE);
+									memset(msg, '\0', 15*MSG_SIZE);
+									strcpy(msg,"LOGOUT ");
+									char* iptologout;
+									iptologout=findipc();
+									strcat(msg,iptologout);
+									if(send(fdsocket, msg, strlen(msg), 0) == strlen(msg))
+										printf("Done!\n");
+									cse4589_print_and_log("[%s:END]\n", "LOGOUT");
+									}
+									else{
+										cse4589_print_and_log("[%s:ERROR]\n", "LOGOUT");
+										cse4589_print_and_log("[%s:END]\n", "LOGOUT");
+									}
+									break;
+								}
 							default:;
 
 							}
@@ -524,7 +563,7 @@ int connect_to_host(char* port)
 						// 	/* Remove from watched list */
 							FD_CLR(sock_index, &master_list);
 						}
-						else {
+						else {//Process Refresh
 							//Process incoming data from existing clients here ...
 							
 							printf("\nServer sent me: %s\n", buffer);
@@ -592,6 +631,29 @@ int connect_to_host(char* port)
 								cse4589_print_and_log("msg from:%s\n[msg]:%s\n",h1,h2);
 								cse4589_print_and_log("[RECEIVED:END]\n");
 									fflush(stdout);
+								}
+								else{
+									if (strncmp(h,"REFRESH",7)==0){
+										ipp_index=-1;
+										while(h!=NULL)
+									{
+										h=strtok_r(NULL,",",&strlist); 
+										if(h!=NULL && strcmp(h,"LOGIN")!=0){ 
+										list[++ipp_index]=h;}
+									}
+									// list[i++]=strtok_r(NULL, ",", &strlist);
+									int j=0;
+									strcpy(listall,"");
+									while(j<=ipp_index){
+									// sprintf(listall,"%s\n",list[j]);
+									strcat(listall,list[j]);
+										j++;
+									}
+									
+									printf("%s",listall);
+									fflush(stdout);
+
+									}
 								}
 								}
 							
