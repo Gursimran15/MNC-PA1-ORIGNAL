@@ -79,7 +79,23 @@ char hostname[256];
 char ipaddr[INET_ADDRSTRLEN];
 int port_no;
 };
+int sendall(int s, char *buf, int *len)
+{
+    int total = 0;        // how many bytes we've sent
+    int bytesleft = *len; // how many we have left to send
+    int n;
 
+    while(total < *len) {
+        n = send(s, buf+total, bytesleft, 0);
+        if (n == -1) { break; }
+        total += n;
+        bytesleft -= n;
+    }
+
+    *len = total; // return number actually sent here
+
+    return n==-1?-1:0; // return -1 on failure, 0 on success
+} 
 int client(char *port)
 {
 	// if(c != 3) {
@@ -337,14 +353,22 @@ int connect_to_host(char* port)
 									}
 									break;
 							case 5: if(login_flag == 1){
-										printf("For List %s %d\n",list[0],ipp_index);
+									// char *buffer = (char*) malloc(sizeof(char)*2*BUFFER_SIZE);
+									// 	memset(buffer, '\0', 2*BUFFER_SIZE);
+										// printf("For List %s %d\n",list[0],ipp_index);
 										// for(int l=0;l<=ipp_index;l++){
 									// printf("I am here in List:%s\n",list[0]);
 									// cse4589_print_and_log("%s\n",list[l]);
 										// strcat(temp,list[l]);
 										// strcat(temp, "\n");
 										// }
-									if(strcmp(cmd,"LIST")==0){
+										// char *strforsend=cmd;
+										// strtok_r(strforsend, " ", &strforsend);
+										// strtok_r(NULL, " ", &strforsend);
+										// args[2]=strtok_r(NULL, "\n", &strforsend);
+										char *msg = (char*) malloc(sizeof(char)*MSG_SIZE);
+									memset(msg, '\0', MSG_SIZE);
+									if(strcmp(args[0],"SEND")==0){
 									
 									// for(int j=0;j<=ipp_index;j++){
 									// printf("%s\n",list[j]);
@@ -359,10 +383,23 @@ int connect_to_host(char* port)
 									// 	}
 										// printf("%s\n",temp);
 									//Problem here
-									cse4589_print_and_log("[%s:SUCCESS]\n", "LIST");
-									// cse4589_print_and_log("[%s:hello]\n", "LIST");
-									cse4589_print_and_log("%s",listall);
-									cse4589_print_and_log("[%s:END]\n", "LIST");
+									cse4589_print_and_log("[%s:SUCCESS]\n", "SEND");
+									// cse4589_print_and_log("[%s:hello]\n", "LIST")
+									strcpy(msg,"SEND ");
+									strcat(msg,args[1]);
+									strcat(msg," ");
+									strcat(msg,args[2]);
+									int len;
+
+										len = strlen(msg);
+										// if (sendall(s, msg, &len) == -1) {
+										// 	perror("sendall");
+										// 	printf("We only sent %d bytes because of the error!\n", len);
+										// } 
+									if(send(fdsocket, msg, strlen(msg), 0) == strlen(msg))
+										printf("Done!\n");
+									fflush(stdout);
+									cse4589_print_and_log("[%s:END]\n", "SEND");
 									// printf("%s\n",temp);
 									}
 									else{
@@ -397,14 +434,20 @@ int connect_to_host(char* port)
 							//Process incoming data from existing clients here ...
 							
 							printf("\nServer sent me: %s\n", buffer);
-							char *strlist=buffer;
+									string s=buffer;
+									char *strlist=buffer;
 									// int i=ipp_index+1;
 									char *h;
+									h=strtok_r(strlist," ",&strlist); 
+									printf("%s\n",h);
+									// std::size_t found = s.find("LOGIN");
+								if (strncmp(h,"LOGIN",5)==0){
+								
 									while(h!=NULL)
 									{
-										h=strtok_r(strlist, ",", &strlist);  
-										if(h!=NULL) 
-											list[++ipp_index]=h;
+										h=strtok_r(NULL,",",&strlist); 
+										if(h!=NULL && strcmp(h,"LOGIN")!=0){ 
+										list[++ipp_index]=h;}
 									}
 									// list[i++]=strtok_r(NULL, ",", &strlist);
 									int j=0;
@@ -416,9 +459,31 @@ int connect_to_host(char* port)
 									}
 									
 									printf("%s",listall);
-							fflush(stdout);
+									fflush(stdout);
+								}
+								else{
+									printf("%s\n",h);
+								// std::size_t found = s.find("SEND");
+								cse4589_print_and_log("[RECEIVED:SUCCESS]\n");
+								if(strncmp(h,"SEND",4)==0){
+									
+										char *h1;
+										char *h2;
+										h1=strtok_r(NULL, " ", &strlist);  
+										h2=strtok_r(NULL, " ", &strlist); 
+									if(h1!=NULL){ 
+										printf("%s\n",h1);
+								}
+								if(h2!=NULL){
+										printf("%s\n",h2);
+								}
+								cse4589_print_and_log("msg from:%s\n[msg]:%s\n",h1,h2);
+								cse4589_print_and_log("[RECEIVED:END]\n");
+									fflush(stdout);
+								}
+							
 						}
-						
+						}
 						free(buffer);
 					}		
 				}//END ISSET

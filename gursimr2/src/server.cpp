@@ -55,6 +55,7 @@ int list_id;
 char hostname[512];
 char ipaddr[INET_ADDRSTRLEN];
 int port_no;
+int fd;
 };
 bool compare(lists a, lists b) 
 { 
@@ -100,7 +101,7 @@ char* findip(){
 	close(udp_socket);
 	return ip;
 }
-void add_client(char *buffer,int &i_index,lists l[]){
+void add_client(char *buffer,int &i_index,lists l[],int socketfd){
 							char *args[3];
 							// printf("I am here");
 							char *str=buffer;
@@ -129,6 +130,8 @@ void add_client(char *buffer,int &i_index,lists l[]){
 								he = gethostbyaddr(&ipv4addr, sizeof(ipv4addr), AF_INET);
 								// printf("I am here 8");
 								l[i_index].list_id=i_index+1;
+								l[i_index].fd=socketfd;
+								printf("%d\n",socketfd);
 								// printf("I am here 8.1");
 								strncpy(l[i_index].hostname,he->h_name,256);
 								// printf("%-5d%-35s%-20s%-8d\n", l[ipp_index].list_id,l[ipp_index].hostname,l[ipp_index].ipaddr,l[ipp_index].port_no);
@@ -316,6 +319,7 @@ int server(char *arg)
 						printf("\nRemote Host connected!\n");
 						al[al_index ++] = (struct sockaddr *)&client_addr;
 						/* Add to watched socket list */
+						printf("%d\n",fdaccept);
 						FD_SET(fdaccept, &master_list);
 						if(fdaccept > head_socket) head_socket = fdaccept;
 					}
@@ -352,10 +356,10 @@ int server(char *arg)
     						// {std::cout << "first 'node' found at: " << found << '\n';
 							printf("Before add client :%d\n",ipp_index);
 							printf("%s %s",l[0].hostname,l[1].hostname);
-							add_client(buffer,ipp_index,l);
+							add_client(buffer,ipp_index,l,sock_index);
 							printf("After add client :%d\n",ipp_index);
 							printf("%s %s",l[0].hostname,l[1].hostname);
-							strcpy(msg,"");
+							strcpy(msg,"LOGIN,");
 							int n;
 							for(int i=0;i<=ipp_index;i++){
 										n=sprintf(buffer,"%-5d%-35s%-20s%-8d\n",l[i].list_id,l[i].hostname,l[i].ipaddr,l[i].port_no);
@@ -365,6 +369,70 @@ int server(char *arg)
 										}
 							if(send(sock_index,msg, strlen(msg), 0) == strlen(msg))
 								printf("\nList send to Client\n");
+							}
+							else{
+								std::size_t found = s.find("SEND");
+								if (found!=std::string::npos){
+									printf("Client Sent:%s\n",buffer);
+									socklen_t len;
+									struct sockaddr_storage addr;
+									char ipstr[INET6_ADDRSTRLEN];
+									int port;
+
+									len = sizeof addr;
+									getpeername(sock_index, (struct sockaddr*)&addr, &len);
+									if (addr.ss_family == AF_INET) {
+										struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+										port = ntohs(s->sin_port);
+										inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
+									}
+									printf("Peer IP address: %s\n", ipstr);
+									
+										int dest;
+										char *args[3];
+										// printf("I am here");
+										char *str=buffer;
+										// printf("I am here 1");
+										args[0]=strtok_r(str, " ", &str);
+										printf("%s\n",args[0]);
+											char *msg = (char*) malloc(sizeof(char)*2*MSG_SIZE);
+											memset(msg, '\0', MSG_SIZE);
+										// printf("I am here 2");
+										// if(strcmp(args[0],"LOGIN")==0){
+											// printf("I am here 3");
+											args[1]=strtok_r(NULL, " ",&str);
+											printf("%s\n",args[1]);
+											
+											for(int i=0;i<=ipp_index;i++){
+												if(strcmp(l[i].ipaddr,args[1])==0){
+													dest=l[i].fd;
+												}
+											}
+											// printf("I am here 4");
+											// printf("I am here 5");
+											args[2]=strtok_r(NULL, " ",&str);
+											printf("%s\n",args[2]);
+											cse4589_print_and_log("[RELAYED:SUCCESS]\n");
+											cse4589_print_and_log("msg from:%s, to:%s\n[msg]:%s\n",ipstr, args[1], args[2]);
+											strcpy(msg,"SEND ");
+											strcat(msg,ipstr);
+											strcat(msg," ");
+											strcat(msg,args[2]);
+											printf("%s\n%d\n",msg,dest);
+											 for(int j = 0; j <= head_socket; j++) {
+                            // send to everyone!
+                            if (FD_ISSET(j, &master_list)) {
+                                // except the listener and ourselves
+                                if (j != server_socket && j != sock_index) {
+												if(send(dest, msg, strlen(msg), 0) == strlen(msg))
+												{	printf("Done!\n");break;}
+												fflush(stdout);
+								}
+							}
+											 }
+											 cse4589_print_and_log("[RELAYED:END]\n");
+								}
+								
 							}
 							// if(send(fdaccept, buffer , strlen(buffer), 0) == strlen(buffer))
 							// 	printf("Done!\n");
