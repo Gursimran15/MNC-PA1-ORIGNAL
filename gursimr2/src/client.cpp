@@ -102,6 +102,14 @@ int connect_to_host(char* port)
 	// , caddr_len
 	// struct sockaddr_in client_addr;
 	fd_set master_list, watch_list;
+	//  int size = 30; 
+  
+    // // can allocate size dynamically. 
+    // char* str2 = (char*)malloc(sizeof(char) * size); 
+	char listall[1024];
+	char **list = (char **)malloc(4 * sizeof(char *)); 
+    for (int i=0; i<4; i++) 
+         list[i] = (char *)malloc(1024 * sizeof(char)); 
 
 	// /* Set up hints structure */	
 	memset(&hints, 0, sizeof(hints));
@@ -124,8 +132,8 @@ int connect_to_host(char* port)
 	head_socket=0;
 	lists l[4];
 	int ipp_index=-1;
-	char *list[4];
 	int login_flag=0;
+
 	while(TRUE){
 		memcpy(&watch_list, &master_list, sizeof(master_list));
 		
@@ -173,13 +181,16 @@ int connect_to_host(char* port)
 							if(strcmp(cmd,"LIST")==0){
 								s=4;
 							}
+							if(strcmp(args[0],"SEND")==0){
+								s=5;
+							}
 							printf("7:%d%s\n",sock_index,cmd);
 							// if(s>3){
 							// 	printf("You must Login first!");
 							// }
-							// for(int j=0;j<=ipp_index;j++){
-							// 	printf("%s\n",list[j]);
-							// }
+							for(int j=0;j<=ipp_index;j++){
+								printf("%s\n",list[j]);
+							}
 						switch(s){
 							case 0:{
 									if(strcmp(cmd,"AUTHOR")==0){
@@ -285,20 +296,36 @@ int connect_to_host(char* port)
 									}
 									break;
 									}
-							case 4: {
+							case 4: 
+									printf("For List %s %d\n",list[0],ipp_index);
 									if(login_flag == 1){
-										// printf("For List %s %d\n",list[0],ipp_index);
+										printf("For List %s %d\n",list[0],ipp_index);
+										for(int l=0;l<=ipp_index;l++){
+									// printf("I am here in List:%s\n",list[0]);
+									// cse4589_print_and_log("%s\n",list[l]);
+										// strcat(temp,list[l]);
+										// strcat(temp, "\n");
+										}
 									if(strcmp(cmd,"LIST")==0){
 									
 									// for(int j=0;j<=ipp_index;j++){
 									// printf("%s\n",list[j]);
 									// 	}
-									for(int l=0;l<=ipp_index;l++){
-									// printf("I am here in List:%s\n",list[0]);
-									cse4589_print_and_log("%s\n",list[l]);
-										}
-									cse4589_print_and_log("[%s:SUCCESS]\n", "LIST");//Problem here
+									// char temp[1024];
+									// strcpy(temp, " ");
+									// for(int l=0;l<=ipp_index;l++){
+									// // printf("I am here in List:%s\n",list[0]);
+									// cse4589_print_and_log("%s\n",list[l]);
+									// 	// strcat(temp,list[l]);
+									// 	// strcat(temp, "\n");
+									// 	}
+										// printf("%s\n",temp);
+									//Problem here
+									cse4589_print_and_log("[%s:SUCCESS]\n", "LIST");
+									// cse4589_print_and_log("[%s:hello]\n", "LIST");
+									cse4589_print_and_log("%s",listall);
 									cse4589_print_and_log("[%s:END]\n", "LIST");
+									// printf("%s\n",temp);
 									}
 									else{
 										cse4589_print_and_log("[%s:ERROR]\n", "LIST");
@@ -308,7 +335,45 @@ int connect_to_host(char* port)
 									else{
 										printf("You need to login first");
 									}
-									break;}
+									break;
+							case 5: if(login_flag == 1){
+										printf("For List %s %d\n",list[0],ipp_index);
+										// for(int l=0;l<=ipp_index;l++){
+									// printf("I am here in List:%s\n",list[0]);
+									// cse4589_print_and_log("%s\n",list[l]);
+										// strcat(temp,list[l]);
+										// strcat(temp, "\n");
+										// }
+									if(strcmp(cmd,"LIST")==0){
+									
+									// for(int j=0;j<=ipp_index;j++){
+									// printf("%s\n",list[j]);
+									// 	}
+									// char temp[1024];
+									// strcpy(temp, " ");
+									// for(int l=0;l<=ipp_index;l++){
+									// // printf("I am here in List:%s\n",list[0]);
+									// cse4589_print_and_log("%s\n",list[l]);
+									// 	// strcat(temp,list[l]);
+									// 	// strcat(temp, "\n");
+									// 	}
+										// printf("%s\n",temp);
+									//Problem here
+									cse4589_print_and_log("[%s:SUCCESS]\n", "LIST");
+									// cse4589_print_and_log("[%s:hello]\n", "LIST");
+									cse4589_print_and_log("%s",listall);
+									cse4589_print_and_log("[%s:END]\n", "LIST");
+									// printf("%s\n",temp);
+									}
+									else{
+										cse4589_print_and_log("[%s:ERROR]\n", "LIST");
+										cse4589_print_and_log("[%s:END]\n", "LIST");
+									}
+									}
+									else{
+										printf("You need to login first");
+									}
+									break;
 							default:;
 
 							}
@@ -343,11 +408,14 @@ int connect_to_host(char* port)
 									}
 									// list[i++]=strtok_r(NULL, ",", &strlist);
 									int j=0;
+									strcpy(listall,"");
 									while(j<=ipp_index){
-										printf("%s",list[j]);
+									// sprintf(listall,"%s\n",list[j]);
+									strcat(listall,list[j]);
 										j++;
 									}
-									// printf("%s",buffer);
+									
+									printf("%s",listall);
 							fflush(stdout);
 						}
 						
