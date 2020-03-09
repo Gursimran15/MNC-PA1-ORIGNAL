@@ -58,6 +58,10 @@ int port_no;
 int fd;
 int login;
 };
+struct blocking{
+	int index[4];
+	char blocker[INET_ADDRSTRLEN];
+};
 bool compare(lists a, lists b) 
 { 
 	int t;
@@ -164,6 +168,8 @@ int server(char *arg)
 	// 	printf("Usage:%s [port]\n", argv[0]);
 	// 	exit(-1);
 	// }
+	// blocking b[4];
+	map<string, string> blocklist;
 	int ipp_index=-1;
 	int donotmove=0;
 	int server_socket, head_socket, selret, sock_index, fdaccept=0, caddr_len;
@@ -239,6 +245,10 @@ int server(char *arg)
 						memset(cmd, '\0', CMD_SIZE);
 						if(fgets(cmd, CMD_SIZE-1, stdin) == NULL) //Mind the newline character that will be written to cmd
 							exit(-1);
+							char *strforblocked=cmd;
+							char *args[2];
+							int j=0;
+							while(args[j++]=strtok_r(strforblocked, " \n", &strforblocked));
 						int s;
 							if(strcmp(cmd,"AUTHOR\n")==0){
 								s=0;
@@ -254,6 +264,9 @@ int server(char *arg)
 							}
 							if(strcmp(cmd,"EXIT\n")==0){
 								s=4;
+							}
+							if(strcmp(args[0],"BLOCKED")==0){
+								s=5;
 							}
 							// if(s>3){
 							// 	printf("You must Login first!");
@@ -314,7 +327,19 @@ int server(char *arg)
 									}
 									else{
 										cse4589_print_and_log("[%s:ERROR]\n", "EXIT");
-										cse4589_print_and_log("[%s:END]\n", "EXIt");
+										cse4589_print_and_log("[%s:END]\n", "EXIT");
+									}
+									break;
+									}
+							case 5: {
+									if(strcmp(args[0],"BLOCKED")==0){
+									cse4589_print_and_log("[%s:SUCCESS]\n", "BLOCKED");
+									cse4589_print_and_log("[%s:END]\n", "BLOCKED");
+									// exit(0);
+									}
+									else{
+										cse4589_print_and_log("[%s:ERROR]\n", "BLOCKED");
+										cse4589_print_and_log("[%s:END]\n", "BLOCKED");
 									}
 									break;
 									}
@@ -425,11 +450,21 @@ int server(char *arg)
 												if(strcmp(l[i].ipaddr,args[1])==0 && l[i].login==1){
 													dest=l[i].fd;
 												}
+
 												// else if(!(strcmp(l[i].ipaddr,args[1])==0)&& l[i].login==0){
 												// 	cse4589_print_and_log("[RELAYED:ERROR]\n");
 												// 	cse4589_print_and_log("[RELAYED:END]\n");
 												// }
 											}
+											// auto it = blocklist.begin();
+		//Checking Blocklist Value against IP									// 						// Iterate through the map
+											// 						while(it != blocklist.end())
+											// 						{
+											// 							if(blocklist.find([1]])){
+
+											// 							}
+											// 							it++;
+											// 						}
 											// printf("I am here 4");
 											// printf("I am here 5");
 											args[2]=strtok_r(NULL, " ",&str);
@@ -564,47 +599,38 @@ int server(char *arg)
 															l[i].login=0;
 															donotmove=1;
 														}}
-											// for(int i=0;i<=ipp_index;i++){
-											// 			if((strcmp(l[i].ipaddr,args[1])==0)){
-											// 			 t=l[i];
-											// 			 l[i]=l[ipp_index];
-											// 			 l[ipp_index]=t;
-											// 			 break;
-											// 			}
-											// 			}
-											// 			l[ipp_index].fd=0;
-											// 			l[ipp_index].list_id=0;
-											// 			l[ipp_index].port_no=0;
-											// 			strcpy(l[ipp_index].hostname,"");
-											// 			strcpy(l[ipp_index].ipaddr,"");
-											// 			ipp_index--;
-											// 			printf("%d\n",ipp_index);
-											// 			if(ipp_index>1)
-											// 			sorting(l,ipp_index);
-											// for(int i=0;i<=ipp_index;i++){
-											// 			n=sprintf(buffer,"%-5d%-35s%-20s%-8d\n",l[i].list_id,l[i].hostname,l[i].ipaddr,l[i].port_no);
-											// 			strncat(msg,buffer,n);
-											// 			if(i<ipp_index)
-											// 			strncat(msg,",",1);
-											// 			}
-											// for(int i=0;i<=ipp_index;i++){
-											// 				dest=l[i].fd;
-											// 				printf("%s\n%d\n",msg,dest);
-											// 				for(int j = 0; j <= head_socket; j++) {
-											// 			// send to everyone!
-											// 			if (FD_ISSET(j, &master_list)) {
-											// 				// except the listener and ourselves
-											// 				if (j != server_socket && j != sock_index) {
-											// 								if(send(dest, msg, strlen(msg), 0) == strlen(msg))
-											// 								{	printf("Done!\n");break;}
-											// 								fflush(stdout);
-											// 							}
 
-											// 						}
-											// 					}
-																	
-											// 					}
+												}//IF LOGOUT
+												else{
+													std::size_t found = s.find("BLOCK");
+  										if (found!=std::string::npos && donotmove==0){
+											   char *args[3];
+												// printf("I am here");
+												char *str=buffer;
+												// printf("I am here 1");
+												args[0]=strtok_r(str, " ", &str);
+												args[1]=strtok_r(NULL, " ", &str);
+												socklen_t len;
+											struct sockaddr_storage addr;
+											char ipstr[INET6_ADDRSTRLEN];
+											int port;
 
+											len = sizeof addr;
+											getpeername(sock_index, (struct sockaddr*)&addr, &len);
+											if (addr.ss_family == AF_INET) {
+												struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+												port = ntohs(s->sin_port);
+												inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
+											}
+											printf("Peer IP address: %s\n", ipstr);
+											blocklist[ipstr]=args[1];
+												// for(int i=0;i<=ipp_index;i++){
+												// 		if(!(strcmp(l[i].ipaddr,args[1])==0) && l[i].login==1){
+												// 			b[0].blocker=ipstr;
+												// 			b[0].index[0]=}
+												// }
+												
+										  }//IF BLOCK
 												}
 											}
 										}

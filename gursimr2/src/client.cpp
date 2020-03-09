@@ -212,6 +212,9 @@ int connect_to_host(char* port)
 							if(strcmp(cmd,"LOGOUT")==0){
 								s=9;
 							}
+							if(strcmp(args[0],"BLOCK")==0){
+								s=10;
+							}
 							printf("7:%d%s\n",sock_index,cmd);
 							// if(s>3){
 							// 	printf("You must Login first!");
@@ -525,6 +528,7 @@ int connect_to_host(char* port)
 									break;
 								}
 							case 9: {
+									if(login_flag == 1){
 									if(strcmp(cmd,"LOGOUT")==0){
 									cse4589_print_and_log("[%s:SUCCESS]\n", "LOGOUT");
 									login_flag=0;
@@ -542,8 +546,43 @@ int connect_to_host(char* port)
 										cse4589_print_and_log("[%s:ERROR]\n", "LOGOUT");
 										cse4589_print_and_log("[%s:END]\n", "LOGOUT");
 									}
+									}
+									else{
+										printf("You need to login first");
+									}
 									break;
 								}
+							case 10:{
+								if(login_flag == 1){
+									char *msg = (char*) malloc(sizeof(char)*15*MSG_SIZE);
+									memset(msg, '\0', 15*MSG_SIZE);
+									if(strcmp(args[0],"BLOCK")==0){
+										cse4589_print_and_log("[%s:SUCCESS]\n", "BLOCK");
+									
+									strcpy(msg,"BLOCK ");
+									strcat(msg,args[1]);
+									
+									int len;
+
+										len = strlen(msg);
+										
+									if(send(fdsocket, msg, strlen(msg), 0) == strlen(msg))
+										printf("Done!\n");
+									fflush(stdout);
+									cse4589_print_and_log("[%s:END]\n", "BLOCK");
+									// printf("%s\n",temp);
+									}
+									else{
+										cse4589_print_and_log("[%s:ERROR]\n", "BLOCK");
+										cse4589_print_and_log("[%s:END]\n", "BLOCK");
+									}
+									
+									}
+									else{
+										printf("You need to login first");
+									}
+									break;
+							}
 							default:;
 
 							}
