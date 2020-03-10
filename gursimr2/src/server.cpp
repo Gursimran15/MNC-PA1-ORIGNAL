@@ -170,6 +170,7 @@ int server(char *arg)
 	// }
 	// blocking b[4];
 	map<string, string> blocklist;
+	int f=0;
 	int ipp_index=-1;
 	int donotmove=0;
 	int server_socket, head_socket, selret, sock_index, fdaccept=0, caddr_len;
@@ -240,16 +241,15 @@ int server(char *arg)
 					
 					/* Check if new command on STDIN */
 					if (sock_index == STDIN){
-						char *cmd = (char*) malloc(sizeof(char)*CMD_SIZE);
+						char *cmd = (char*) malloc(sizeof(char)*30*CMD_SIZE);
 						// printf("\nI got: here 3\n");
-						memset(cmd, '\0', CMD_SIZE);
-						if(fgets(cmd, CMD_SIZE-1, stdin) == NULL) //Mind the newline character that will be written to cmd
+						memset(cmd, '\0', 30*CMD_SIZE);
+						if(fgets(cmd, 30*CMD_SIZE-1, stdin) == NULL) //Mind the newline character that will be written to cmd
 							exit(-1);
 							char *strforblocked=cmd;
 							char *args[2];
 							int j=0;
-							while(args[j++]=strtok_r(strforblocked, " \n", &strforblocked));
-						int s;
+							int s;
 							if(strcmp(cmd,"AUTHOR\n")==0){
 								s=0;
 							}
@@ -265,6 +265,7 @@ int server(char *arg)
 							if(strcmp(cmd,"EXIT\n")==0){
 								s=4;
 							}
+							while(args[j++]=strtok_r(strforblocked," ", &strforblocked));
 							if(strcmp(args[0],"BLOCKED")==0){
 								s=5;
 							}
@@ -334,6 +335,7 @@ int server(char *arg)
 							case 5: {
 									if(strcmp(args[0],"BLOCKED")==0){
 									cse4589_print_and_log("[%s:SUCCESS]\n", "BLOCKED");
+									
 									cse4589_print_and_log("[%s:END]\n", "BLOCKED");
 									// exit(0);
 									}
@@ -343,6 +345,7 @@ int server(char *arg)
 									}
 									break;
 									}
+									default:;
 						}
 
 						printf("\nI got: %s\n", cmd);
@@ -439,8 +442,8 @@ int server(char *arg)
 										// printf("I am here 1");
 										args[0]=strtok_r(str, " ", &str);
 										printf("%s\n",args[0]);
-											char *msg = (char*) malloc(sizeof(char)*15*MSG_SIZE);
-											memset(msg, '\0', 15*MSG_SIZE);
+											char *msg = (char*) malloc(sizeof(char)*30*MSG_SIZE);
+											memset(msg, '\0', 30*MSG_SIZE);
 										// printf("I am here 2");
 										// if(strcmp(args[0],"LOGIN")==0){
 											// printf("I am here 3");
@@ -456,20 +459,26 @@ int server(char *arg)
 												// 	cse4589_print_and_log("[RELAYED:END]\n");
 												// }
 											}
-											// auto it = blocklist.begin();
-		//Checking Blocklist Value against IP									// 						// Iterate through the map
-											// 						while(it != blocklist.end())
-											// 						{
-											// 							if(blocklist.find([1]])){
-
-											// 							}
-											// 							it++;
-											// 						}
+											auto it = blocklist.begin();
+		// Checking Blocklist Value against IP									// 						// Iterate through the map
+																	while(it != blocklist.end())
+																	{
+																		if(it->first==args[1] && it->second==ipstr){
+																			f=1;
+																			break;
+																		}
+																		else{
+																			f=0;
+																		}
+																		it++;
+																	}
 											// printf("I am here 4");
 											// printf("I am here 5");
 											args[2]=strtok_r(NULL, " ",&str);
 											printf("%s\n",args[2]);
-											cse4589_print_and_log("[RELAYED:SUCCESS]\n");
+											
+											if(f==0){
+												cse4589_print_and_log("[RELAYED:SUCCESS]\n");
 											cse4589_print_and_log("msg from:%s, to:%s\n[msg]:%s\n",ipstr, args[1], args[2]);
 											// LOG_PRINT("msg from:%s, to:%s\n[msg]:%s\n",ipstr, args[1], args[2]);
 											strcpy(msg,"SEND ");
@@ -489,6 +498,8 @@ int server(char *arg)
 							}
 											 }
 											 cse4589_print_and_log("[RELAYED:END]\n");
+											}//block if
+											 
 								}
 								else{
 											std::size_t found = s.find("BROADCAST");
@@ -526,6 +537,8 @@ int server(char *arg)
 													for(int i=0;i<=ipp_index;i++){
 														if(!(strcmp(l[i].ipaddr,ipstr)==0) && l[i].login==1){
 															dest=l[i].fd;
+															if(l[i].ipaddr==blocklist.find(ipstr)->second)
+																continue;
 															printf("%s\n%d\n",msg,dest);
 															for(int j = 0; j <= head_socket; j++) {
 														// send to everyone!

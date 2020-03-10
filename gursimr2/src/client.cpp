@@ -263,6 +263,7 @@ int connect_to_host(char* port)
 									break;
 									}
 							case 3: {
+									if(login_flag == 0){
 									if(strcmp(args[0],"LOGIN")==0){
 									
 									printf("l1:%d%s\n",sock_index,cmd);
@@ -325,6 +326,10 @@ int connect_to_host(char* port)
 										cse4589_print_and_log("[%s:ERROR]\n",args[0]);
 										cse4589_print_and_log("[%s:END]\n",args[0]);
 									}
+									}
+									else{
+										printf("You need to logout first");
+									}
 									break;
 									}
 							case 4: 
@@ -368,35 +373,11 @@ int connect_to_host(char* port)
 									}
 									break;
 							case 5: if(login_flag == 1){
-									// char *buffer = (char*) malloc(sizeof(char)*2*BUFFER_SIZE);
-									// 	memset(buffer, '\0', 2*BUFFER_SIZE);
-										// printf("For List %s %d\n",list[0],ipp_index);
-										// for(int l=0;l<=ipp_index;l++){
-									// printf("I am here in List:%s\n",list[0]);
-									// cse4589_print_and_log("%s\n",list[l]);
-										// strcat(temp,list[l]);
-										// strcat(temp, "\n");
-										// }
-										// char *strforsend=cmd;
-										// strtok_r(strforsend, " ", &strforsend);
-										// strtok_r(NULL, " ", &strforsend);
-										// args[2]=strtok_r(NULL, "\n", &strforsend);
-										char *msg = (char*) malloc(sizeof(char)*15*MSG_SIZE);
-									memset(msg, '\0', 15*MSG_SIZE);
-									if(strcmp(args[0],"SEND")==0){
 									
-									// for(int j=0;j<=ipp_index;j++){
-									// printf("%s\n",list[j]);
-									// 	}
-									// char temp[1024];
-									// strcpy(temp, " ");
-									// for(int l=0;l<=ipp_index;l++){
-									// // printf("I am here in List:%s\n",list[0]);
-									// cse4589_print_and_log("%s\n",list[l]);
-									// 	// strcat(temp,list[l]);
-									// 	// strcat(temp, "\n");
-									// 	}
-										// printf("%s\n",temp);
+										char *msg = (char*) malloc(sizeof(char)*30*MSG_SIZE);
+									memset(msg, '\0', 30*MSG_SIZE);
+									if(strcmp(args[0],"SEND")==0){
+								
 									//Problem here
 									cse4589_print_and_log("[%s:SUCCESS]\n", "SEND");
 									// cse4589_print_and_log("[%s:hello]\n", "LIST")
@@ -407,10 +388,7 @@ int connect_to_host(char* port)
 									int len;
 
 										len = strlen(msg);
-										// if (sendall(s, msg, &len) == -1) {
-										// 	perror("sendall");
-										// 	printf("We only sent %d bytes because of the error!\n", len);
-										// } 
+										
 									if(send(fdsocket, msg, strlen(msg), 0) == strlen(msg))
 										printf("Done!\n");
 									fflush(stdout);
@@ -431,32 +409,16 @@ int connect_to_host(char* port)
 									memset(msg, '\0', 15*MSG_SIZE);
 									if(strcmp(args[0],"BROADCAST")==0){
 									
-									// for(int j=0;j<=ipp_index;j++){
-									// printf("%s\n",list[j]);
-									// 	}
-									// char temp[1024];
-									// strcpy(temp, " ");
-									// for(int l=0;l<=ipp_index;l++){
-									// // printf("I am here in List:%s\n",list[0]);
-									// cse4589_print_and_log("%s\n",list[l]);
-									// 	// strcat(temp,list[l]);
-									// 	// strcat(temp, "\n");
-									// 	}
-										// printf("%s\n",temp);
 									//Problem here
 									cse4589_print_and_log("[%s:SUCCESS]\n", "BROADCAST");
 									// cse4589_print_and_log("[%s:hello]\n", "LIST")
 									strcpy(msg,"BROADCAST ");
 									strcat(msg,args[1]);
-									// strcat(msg," ");
-									// strcat(msg,args[2]);
+									
 									int len;
 
 										len = strlen(msg);
-										// if (sendall(s, msg, &len) == -1) {
-										// 	perror("sendall");
-										// 	printf("We only sent %d bytes because of the error!\n", len);
-										// } 
+										
 									if(send(fdsocket, msg, strlen(msg), 0) == strlen(msg))
 										printf("Done!\n");
 									fflush(stdout);
